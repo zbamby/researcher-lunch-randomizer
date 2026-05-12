@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>每日午餐随机搭配器</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: #fbf6ec;
+      color: #2f2a24;
+      padding: 18px;
+    }
+    .app { max-width: 1080px; margin: 0 auto; }
+    header { text-align: center; margin: 14px 0 24px; }
+    h1 { margin: 8px 0; font-size: clamp(28px, 5vw, 48px); }
+    .subtitle { color: #6b6258; }
+    .badge {
+      display: inline-block;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.75);
+      box-shadow: 0 2px 10px rgba(0,0,0,.04);
+      font-weight: 600;
+    }
+    .panel, .card, .tip {
+      background: rgba(255,255,255,.82);
+      border: 1px solid #eadfce;
+      border-radius: 24px;
+      box-shadow: 0 8px 24px rgba(91,70,42,.06);
+    }
+    .panel {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+    label { font-weight: 700; }
+    input, select {
+      width: 100%;
+      margin-top: 8px;
+      border: 1px solid #d9cdbb;
+      border-radius: 16px;
+      padding: 12px;
+      font-size: 16px;
+      background: white;
+    }
+    button {
+      width: 100%;
+      border: 0;
+      border-radius: 18px;
+      padding: 14px 18px;
+      font-size: 17px;
+      font-weight: 800;
+      background: #2f6f4e;
+      color: white;
+      cursor: pointer;
+    }
+    button:active { transform: translateY(1px); }
+    .bmi { color: #70675d; font-size: 14px; margin-bottom: 8px; line-height: 1.5; }
+    .result {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .card { padding: 18px; min-height: 210px; }
+    .card h2 { margin: 0 0 12px; font-size: 22px; }
+    .foodbox {
+      background: rgba(255,255,255,.78);
+      border-radius: 18px;
+      padding: 15px;
+      margin-top: 10px;
+    }
+    .name { font-size: 22px; font-weight: 800; }
+    .amount { font-size: 30px; font-weight: 900; margin: 10px 0; }
+    .note { color: #6b6258; font-size: 14px; line-height: 1.5; }
+    .macro { color: #4f473f; font-size: 13px; line-height: 1.5; margin-top: 8px; }
+    .carb { background: #fff1dc; }
+    .protein { background: #ffe9e2; }
+    .veg { background: #edf7e7; }
+    .sauce { background: #eaf3fb; }
+    .placeholder {
+      text-align: center;
+      color: #7b7166;
+      padding: 40px 20px;
+      margin-bottom: 18px;
+    }
+    .tips {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    .tip { padding: 18px; }
+    .tip strong { display: block; margin-bottom: 8px; font-size: 18px; }
+    .small { font-size: 13px; color: #756b60; margin-top: 16px; text-align: center; }
+    @media (max-width: 850px) {
+      .panel, .result, .tips { grid-template-columns: 1fr; }
+      body { padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="badge">🥗 科研带饭随机生成器</div>
+      <h1>每日午餐搭配灵感表</h1>
+      <div class="subtitle">按体重估算午餐碳水和蛋白质目标，再换算成食物克重</div>
+    </header>
+
+    <section class="panel">
+      <label>身高 cm
+        <input id="height" type="number" value="170" min="120" max="220" />
+      </label>
+      <label>体重 kg
+        <input id="weight" type="number" value="65" min="30" max="150" />
+      </label>
+      <label>活动量
+        <select id="activity">
+          <option value="light">轻活动 / 不跑步</option>
+          <option value="normal" selected>普通科研日</option>
+          <option value="run">跑步 / 训练日</option>
+        </select>
+      </label>
+      <div>
+        <div class="bmi">
+          BMI：<span id="bmi">22.5</span><br>
+          午餐目标：碳水 <span id="targetCarb">-</span> g；蛋白质 <span id="targetProtein">-</span> g
+        </div>
+        <button onclick="generateMeal()">🎲 随机生成午餐</button>
+      </div>
+    </section>
+
+    <section id="result" class="placeholder panel">
+      点击按钮，生成今天中午带什么。
+    </section>
+
+    <section class="tips">
+      <div class="tip"><strong>计算逻辑</strong>蛋白质按体重估算；碳水按体重和活动量估算，并折算为这一餐的大致目标。</div>
+      <div class="tip"><strong>食物换算</strong>不同食材按常见营养值换算克重；鹰嘴豆、白豆会同时贡献碳水和蛋白质。</div>
+      <div class="tip"><strong>现实调整</strong>跑步日主食略多；不饿时减少主食；酱料固定少量，不随体重明显增加。</div>
+    </section>
+
+    <p class="small">默认参数仅用于演示。本工具用于日常带饭粗略规划，不替代营养师建议。熟重/干重已在食物名称中标注。</p>
+  </main>
+
+  <script>
+    // Typical nutrition values per 100 g edible portion.
+    // carb/protein are grams per 100 g.
+    const carbs = [
+      { name: "意面（干重）", carb: 72, protein: 13, min: 45, max: 95, note: "煮熟后约为干重的 2.3–2.7 倍" },
+      { name: "燕麦（干重）", carb: 60, protein: 13, min: 35, max: 75, note: "适合早餐/轻午餐" },
+      { name: "全麦面包", carb: 42, protein: 9, min: 50, max: 120, note: "约 1–3 片，按面包大小浮动" },
+      { name: "土豆（熟）", carb: 17, protein: 2, min: 120, max: 350, note: "中等大小约 1 个" },
+      { name: "佛卡夏", carb: 45, protein: 8, min: 40, max: 100, note: "油脂较高，更适合偶尔吃" }
+    ];
+
+    const proteins = [
+      { name: "鹰嘴豆（熟）", carb: 27, protein: 9, min: 80, max: 220, note: "半主食 + 植物蛋白" },
+      { name: "鸡蛋", carb: 1, protein: 13, min: 50, max: 100, step: 50, note: "约 1–2 个" },
+      { name: "去皮鸡肉（熟）", carb: 0, protein: 27, min: 70, max: 160, note: "高蛋白，适合运动日" },
+      { name: "豆腐（硬）", carb: 2, protein: 12, min: 100, max: 250, note: "植物蛋白，微波友好" },
+      { name: "白豆（熟）", carb: 21, protein: 8, min: 100, max: 230, note: "高纤维，开罐即食" },
+      { name: "希腊酸奶", carb: 4, protein: 10, min: 120, max: 250, note: "适合燕麦/轻食" },
+      { name: "金枪鱼（罐头沥干）", carb: 0, protein: 25, min: 60, max: 120, note: "偶尔一次，不建议高频" }
+    ];
+
+    const vegetables = [
+      { name: "小番茄", base: [100, 150], note: "约 6–10 个" },
+      { name: "黄瓜", base: [100, 150], note: "约 1/2 根" },
+      { name: "沙拉菜", base: [30, 60], note: "一大把，开袋即食" },
+      { name: "西兰花（冷冻）", base: [100, 150], note: "微波 2–3 分钟" },
+      { name: "菠菜（冷冻/熟）", base: [80, 120], note: "微波加热即可" },
+      { name: "混合蔬菜（冷冻）", base: [100, 150], note: "省时稳定" }
+    ];
+
+    const sauces = [
+      { name: "橄榄油 + 柠檬", amount: "5–10 g", note: "约 1–2 茶匙油，清爽基础款" },
+      { name: "番茄酱（简版）", amount: "20–40 g", note: "适合意面、豆类、鸡肉" },
+      { name: "苹果醋 + 橄榄油", amount: "5–10 g 油 + 少量醋", note: "适合沙拉菜、豆类" },
+      { name: "蒜香橄榄油", amount: "5–10 g", note: "少油少盐，适合蔬菜" },
+      { name: "酸奶蒜香酱", amount: "30–60 g", note: "适合鸡肉、土豆、沙拉" },
+      { name: "香草柠檬油醋", amount: "5–10 g 油 + 柠檬汁", note: "可加黑胡椒、罗勒/牛至" }
+    ];
+
+    function pickRandom(list) {
+      return list[Math.floor(Math.random() * list.length)];
+    }
+
+    function clamp(x, min, max) {
+      return Math.max(min, Math.min(max, x));
+    }
+
+    function roundTo(x, step) {
+      return Math.round(x / step) * step;
+    }
+
+    function getInputs() {
+      const height = Number(document.getElementById("height").value);
+      const weight = Number(document.getElementById("weight").value);
+      const activity = document.getElementById("activity").value;
+      return { height, weight, activity };
+    }
+
+    function macroTargets() {
+      const { weight, activity } = getInputs();
+
+      // Daily protein target: roughly 1.2–1.6 g/kg/day for active adults.
+      // Lunch gets about 30% of daily protein.
+      const proteinPerKg = activity === "run" ? 1.6 : activity === "normal" ? 1.4 : 1.2;
+      const lunchProtein = weight * proteinPerKg * 0.30;
+
+      // Lunch carbohydrate target by activity.
+      // This is practical meal planning, not strict sports nutrition periodization.
+      const carbPerKgLunch = activity === "run" ? 1.10 : activity === "normal" ? 0.90 : 0.65;
+      const lunchCarb = weight * carbPerKgLunch;
+
+      return {
+        protein: Math.round(lunchProtein),
+        carb: Math.round(lunchCarb)
+      };
+    }
+
+    function foodGramsForMacro(food, targetMacro, macroName) {
+      const density = food[macroName]; // g macro per 100 g food
+      if (!density || density <= 0) return food.min || 0;
+      let grams = targetMacro / density * 100;
+      const step = food.step || 5;
+      grams = roundTo(grams, step);
+      return clamp(grams, food.min, food.max);
+    }
+
+    function vegetableAmount(v) {
+      return v.base.join("–") + " g";
+    }
+
+    function updateSummary() {
+      const { height, weight } = getInputs();
+      const bmi = weight / Math.pow(height / 100, 2);
+      const targets = macroTargets();
+      document.getElementById("bmi").textContent = isFinite(bmi) ? bmi.toFixed(1) : "-";
+      document.getElementById("targetCarb").textContent = targets.carb;
+      document.getElementById("targetProtein").textContent = targets.protein;
+    }
+
+    function buildMeal() {
+      const targets = macroTargets();
+      const carbFood = pickRandom(carbs);
+      const proteinFood = pickRandom(proteins);
+
+      // Main carb portion targets most lunch carbs.
+      let carbGrams = foodGramsForMacro(carbFood, targets.carb, "carb");
+
+      // Protein portion targets lunch protein, subtracting protein already contributed by the carb source.
+      const proteinFromCarb = carbGrams * carbFood.protein / 100;
+      const remainingProtein = Math.max(8, targets.protein - proteinFromCarb);
+      let proteinGrams = foodGramsForMacro(proteinFood, remainingProtein, "protein");
+
+      // If legume is selected as protein, it also contributes carbohydrates.
+      const carbFromProtein = proteinGrams * proteinFood.carb / 100;
+      const totalCarb = carbGrams * carbFood.carb / 100 + carbFromProtein;
+      const totalProtein = proteinFromCarb + proteinGrams * proteinFood.protein / 100;
+
+      const veg1 = pickRandom(vegetables);
+      let veg2 = pickRandom(vegetables);
+      while (veg2.name === veg1.name) veg2 = pickRandom(vegetables);
+
+      return {
+        carb: { ...carbFood, grams: carbGrams },
+        protein: { ...proteinFood, grams: proteinGrams },
+        vegetables: [veg1, veg2],
+        sauce: pickRandom(sauces),
+        totalCarb: Math.round(totalCarb),
+        totalProtein: Math.round(totalProtein),
+        targets
+      };
+    }
+
+    function card(title, item, cls) {
+      return `
+        <div class="card ${cls}">
+          <h2>${title}</h2>
+          <div class="foodbox">
+            <div class="name">${item.name}</div>
+            <div class="amount">${item.grams} g</div>
+            <div class="note">${item.note}</div>
+            <div class="macro">约含：碳水 ${Math.round(item.grams * item.carb / 100)} g；蛋白质 ${Math.round(item.grams * item.protein / 100)} g</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function generateMeal() {
+      updateSummary();
+      const meal = buildMeal();
+
+      document.getElementById("result").className = "result";
+      document.getElementById("result").innerHTML =
+        card("主食", meal.carb, "carb") +
+        card("蛋白质", meal.protein, "protein") +
+        `<div class="card veg">
+          <h2>蔬菜 / 纤维</h2>
+          <div class="foodbox">
+            <div class="name">${meal.vegetables[0].name}</div>
+            <div class="amount">${vegetableAmount(meal.vegetables[0])}</div>
+            <div class="note">${meal.vegetables[0].note}</div>
+          </div>
+          <div class="foodbox">
+            <div class="name">${meal.vegetables[1].name}</div>
+            <div class="amount">${vegetableAmount(meal.vegetables[1])}</div>
+            <div class="note">${meal.vegetables[1].note}</div>
+          </div>
+        </div>` +
+        `<div class="card sauce">
+          <h2>酱料</h2>
+          <div class="foodbox">
+            <div class="name">${meal.sauce.name}</div>
+            <div class="amount">${meal.sauce.amount}</div>
+            <div class="note">${meal.sauce.note}</div>
+            <div class="macro">本餐估算合计：碳水 ${meal.totalCarb} g / 目标 ${meal.targets.carb} g；蛋白质 ${meal.totalProtein} g / 目标 ${meal.targets.protein} g</div>
+          </div>
+        </div>`;
+    }
+
+    document.getElementById("height").addEventListener("input", updateSummary);
+    document.getElementById("weight").addEventListener("input", updateSummary);
+    document.getElementById("activity").addEventListener("change", updateSummary);
+    updateSummary();
+  </script>
+</body>
+</html>
