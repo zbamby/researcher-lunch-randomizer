@@ -44,4 +44,6 @@ Built as a small VibeCoding project.
 
 ## Live Demo
 
-👉 [Open the Lunch Randomizer](https://zbamby.github.io/researcher-lunch-randomizer/)
+点击下面这个链接可以打开小程序界面，手机和电脑端都可以~
+
+👉 [Open the Lunch Randomizer](https://zbamby.github.io/researcher-lunch-randomizer/) 
