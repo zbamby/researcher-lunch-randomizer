@@ -2,6 +2,8 @@
 
 一个给科研人 / 学生 / 忙碌上班族做的午餐随机生成器。
 
+![preview](preview.png)
+
 A lightweight lunch randomizer designed for researchers, students, and busy people who are tired of deciding what to eat every day.
 
 ## Why I made this
@@ -30,6 +32,9 @@ A lightweight lunch randomizer designed for researchers, students, and busy peop
 * 🥗 简单健康搭配
 * ❄️ 夏天带饭友好
 * 🧠 Designed for low decision fatigue
+
+![preview](example1.png)
+![preview](example2.png)
 
 ## Tech
 
