@@ -2,7 +2,7 @@
 
 一个给科研人 / 学生 / 忙碌上班族做的午餐随机生成器。
 
-![preview](preview.png)
+![App preview](preview.png)
 
 A lightweight lunch randomizer designed for researchers, students, and busy people who are tired of deciding what to eat every day.
 
@@ -33,11 +33,15 @@ A lightweight lunch randomizer designed for researchers, students, and busy peop
 * ❄️ 夏天带饭友好
 * 🧠 Designed for low decision fatigue
 
-![preview](example1.png)
-![preview](example2.png)
+![Example output 1](example1.png)
+![Example output 2](example2.png)
 
 ## Tech
 
 Single-file HTML app (no backend required).
 
 Built as a small VibeCoding project.
+
+## Live Demo
+
+👉 [Open the Lunch Randomizer](https://zbamby.github.io/researcher-lunch-randomizer/)
